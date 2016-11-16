@@ -12,6 +12,11 @@ OPTIONS = [{
   env: 'SFT_UUID'
   help: 'UUID of the skype connector to test'
 }, {
+  names: ['meeting-url', 'm']
+  type: 'string'
+  env: 'SFT_MEETING_URL'
+  help: 'Meeting url to join to'
+}, {
   names: ['help', 'h']
   type: 'bool'
   help: 'Print this help and exit.'
@@ -24,11 +29,14 @@ OPTIONS = [{
 class Command
   constructor: ->
     process.on 'uncaughtException', @die
-    {@uuid, @meshbluConfig} = @parseOptions()
+    {@meetingUrl, @uuid, @meshbluConfig} = @parseOptions()
+    @count = 0
 
   parseOptions: =>
     parser = dashdash.createParser({options: OPTIONS})
-    {uuid, version, help} = parser.parse(process.argv)
+    options = parser.parse(process.argv)
+    {uuid, version, help} = options
+    meetingUrl = options.meeting_url
 
     meshbluConfig = new MeshbluConfig().toJSON()
 
@@ -46,13 +54,18 @@ class Command
       console.error colors.red 'Must use resolveSrv in meshblu.json' unless meshbluConfig.resolveSrv
       process.exit 1
 
-    return {uuid, meshbluConfig}
+    if !meetingUrl
+      console.warn colors.yellow 'Missing --meeting-url, going to use Meet Now'
+
+    return {uuid, meshbluConfig, meetingUrl}
 
   run: =>
     async.forever @singleRun, @die
 
   singleRun: (callback) =>
-    tester = new Tester {@meshbluConfig, @uuid}
+    @count += 1
+    console.log 'attempt: ', @count
+    tester = new Tester {@meshbluConfig, @uuid, @meetingUrl}
     tester.run callback
 
   die: (error) =>

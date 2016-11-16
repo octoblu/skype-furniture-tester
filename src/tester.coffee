@@ -5,9 +5,10 @@ debug       = require('debug')('sft:tester')
 debugSilly  = require('debug')('sft:tester:silly')
 
 class Tester
-  constructor: ({@uuid, @meshbluConfig}) ->
+  constructor: ({@uuid, @meshbluConfig, @meetingUrl}) ->
     throw new Error 'Missing required parameter: uuid' unless @uuid?
     throw new Error 'Missing required parameter: meshbluConfig' unless @meshbluConfig?
+    @meetingUrl ?= null
 
     @meshblu = new MeshbluHttp @meshbluConfig
 
@@ -24,7 +25,7 @@ class Tester
     @meshblu.update @uuid, {
       desiredState:
         meeting:
-          url: null
+          url: @meetingUrl
         audioEnabled: true
         videoEnabled: true
     }, callback
@@ -48,7 +49,7 @@ class Tester
   __checkIfSkypeHasStarted: (callback) =>
     @___checkIfSkypeHasStartedCount ?= 0
     @___checkIfSkypeHasStartedCount += 1
-    return callback new Error("Skype hasn't started in 20 checks") if 20 < @___checkIfSkypeHasStartedCount
+    return callback new Error("Skype hasn't started in 100 checks") if 100 < @___checkIfSkypeHasStartedCount
 
     @meshblu.device @uuid, (error, device) =>
       return callback error if error
@@ -60,7 +61,7 @@ class Tester
   __checkIfSkypeHasEnded: (callback) =>
     @___checkIfSkypeHasEndedCount ?= 0
     @___checkIfSkypeHasEndedCount += 1
-    return callback new Error("Skype hasn't ended in 20 checks") if 20 < @___checkIfSkypeHasEndedCount
+    return callback new Error("Skype hasn't ended in 100 checks") if 100 < @___checkIfSkypeHasEndedCount
 
     @meshblu.device @uuid, (error, device) =>
       return callback error if error
