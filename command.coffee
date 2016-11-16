@@ -1,7 +1,7 @@
+async         = require 'async'
 colors        = require 'colors'
 dashdash      = require 'dashdash'
 MeshbluConfig = require 'meshblu-config'
-
 
 packageJSON = require './package.json'
 Tester      = require './src/tester'
@@ -49,8 +49,11 @@ class Command
     return {uuid, meshbluConfig}
 
   run: =>
+    async.forever @singleRun, @die
+
+  singleRun: (callback) =>
     tester = new Tester {@meshbluConfig, @uuid}
-    tester.run @die
+    tester.run callback
 
   die: (error) =>
     return process.exit(0) unless error?
